@@ -1,0 +1,125 @@
+
+// LT Colored Fibo
+// Developer: Forex Robot Easy Team
+// Developer's Site: forexroboteasy.com
+
+// Include necessary libraries
+#include <Trade\Trade.mqh>
+
+// Define colors for each Fibonacci retracement level
+color level1_color = clrRed;
+color level2_color = clrGreen;
+color level3_color = clrBlue;
+
+// Define display options
+bool display_in_background = true;
+
+// Define trading functions
+void GenerateFiboZones(double fibo_level1, double fibo_level2, double fibo_level3)
+{
+    // Get current chart symbol and timeframe
+    string symbol = Symbol();
+    ENUM_TIMEFRAMES timeframe = Period();
+
+    // Calculate Fibonacci retracement levels
+    double price_high = High[0];
+    double price_low = Low[0];
+    double price_range = price_high - price_low;
+    double level1_price = price_high - fibo_level1 * price_range;
+    double level2_price = price_high - fibo_level2 * price_range;
+    double level3_price = price_high - fibo_level3 * price_range;
+
+    // Define price zones and their respective colors
+    double zone1_start, zone1_end, zone2_start, zone2_end, zone3_start, zone3_end;
+    color zone1_color, zone2_color, zone3_color;
+    
+    if (display_in_background)
+    {
+        // Display zones in the background
+        zone1_start = level1_price;
+        zone1_end = level2_price;
+        zone2_start = level2_price;
+        zone2_end = level3_price;
+        zone3_start = level3_price;
+        zone3_end = price_low;
+        zone1_color = level1_color;
+        zone2_color = level2_color;
+        zone3_color = level3_color;
+    }
+    else
+    {
+        // Display zones in the foreground
+        zone1_start = level1_price;
+        zone1_end = level2_price;
+        zone2_start = level2_price;
+        zone2_end = level3_price;
+        zone3_start = level3_price;
+        zone3_end = price_high;
+        zone1_color = level1_color;
+        zone2_color = level2_color;
+        zone3_color = level3_color;
+    }
+
+    // Draw the price zones on the chart
+    ObjectCreate('Zone1', OBJ_RECTANGLE, 0, 0, 0, 0, 0);
+    ObjectSet('Zone1', OBJPROP_TIME1, Time[0]);
+    ObjectSet('Zone1', OBJPROP_PRICE1, zone1_start);
+    ObjectSet('Zone1', OBJPROP_TIME2, Time[0]);
+    ObjectSet('Zone1', OBJPROP_PRICE2, zone1_end);
+    ObjectSet('Zone1', OBJPROP_COLOR, zone1_color);
+
+    ObjectCreate('Zone2', OBJ_RECTANGLE, 0, 0, 0, 0, 0);
+    ObjectSet('Zone2', OBJPROP_TIME1, Time[0]);
+    ObjectSet('Zone2', OBJPROP_PRICE1, zone2_start);
+    ObjectSet('Zone2', OBJPROP_TIME2, Time[0]);
+    ObjectSet('Zone2', OBJPROP_PRICE2, zone2_end);
+    ObjectSet('Zone2', OBJPROP_COLOR, zone2_color);
+
+    ObjectCreate('Zone3', OBJ_RECTANGLE, 0, 0, 0, 0, 0);
+    ObjectSet('Zone3', OBJPROP_TIME1, Time[0]);
+    ObjectSet('Zone3', OBJPROP_PRICE1, zone3_start);
+    ObjectSet('Zone3', OBJPROP_TIME2, Time[0]);
+    ObjectSet('Zone3', OBJPROP_PRICE2, zone3_end);
+    ObjectSet('Zone3', OBJPROP_COLOR, zone3_color);
+
+    // Execute trading actions based on the price zones
+    if (Close[0] >= zone1_start && Close[0] <= zone1_end)
+    {
+        // Place a buy trade
+        Trade.Buy(symbol, 0.01, 'LT Colored Fibo Buy');
+    }
+    else if (Close[0] >= zone2_start && Close[0] <= zone2_end)
+    {
+        // Place a sell trade
+        Trade.Sell(symbol, 0.01, 'LT Colored Fibo Sell');
+    }
+    else if (Close[0] >= zone3_start && Close[0] <= zone3_end)
+    {
+        // Close any existing trades
+        Trade.CloseAll();
+    }
+}
+
+// Entry point of the program
+int OnInit()
+{
+    // Set up the necessary chart parameters
+    ChartSetInteger(0, CHART_EVENT_OBJECT_CREATE, false);
+    ChartSetInteger(0, CHART_EVENT_OBJECT_DELETE, false);
+
+    return(INIT_SUCCEEDED);
+}
+
+// Main program loop
+void OnTick()
+{
+    // Call the function to generate Fibonacci zones
+    GenerateFiboZones(0.382, 0.618, 1.0);
+}
+
+// Program termination
+void OnDeinit(const int reason)
+{
+    // Clean up any remaining objects on the chart
+    ObjectsDeleteAll(0, OBJ_RECTANGLE);
+}
